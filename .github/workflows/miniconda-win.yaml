@@ -1,5 +1,11 @@
+name: Windows
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
 jobs:
-  name: Win
   runs-on: "windows-latest"
   steps:
     - uses: actions/checkout@v2
