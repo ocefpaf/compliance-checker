@@ -19,11 +19,6 @@ jobs:
         fetch-depth: 0
         persist-credentials: false
 
-    - name: Set git up
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-
     - name: Get table version
       id: extract_version
       run: >
