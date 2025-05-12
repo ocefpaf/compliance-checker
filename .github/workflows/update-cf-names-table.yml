@@ -28,7 +28,7 @@ jobs:
       id: extract_version
       run: >
         sudo apt-get update && sudo apt-get install -y libxml2-utils
-        && echo "version=$(xmllint --xpath 'string(//version_number)' "$FILE")" >> $GITHUB_OUTPUT
+        && echo "version=$(xmllint --xpath 'string(//version_number)' compliance_checker/data/cf-standard-name-table.xml)" >> $GITHUB_OUTPUT
 
     - name: Check for changes
       id: check_changes
@@ -42,9 +42,9 @@ jobs:
       uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e  #v7.0.8
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        commit-message: "Update CF-Table to version ${{ steps.extract_version.outputs.version }}"
-        branch: "update-xml-v${{ steps.extract_version.outputs.version }}"
+        commit-message: "Update CF-Table to the latest version"
+        branch: "cf-table-v${{ steps.extract_version.outputs.version }}"
         title: "Update CF-Table to version ${{ steps.extract_version.outputs.version }}"
-        body: This PR updates the CF-Table file to version ${{ steps.extract_version.outputs.version }}.
+        body: "This PR updates the standard_name_table xml file to version ${{ steps.extract_version.outputs.version }}."
         delete-branch: true
         labels: Bot
