@@ -25,8 +25,10 @@ jobs:
         git config user.email "github-actions[bot]@users.noreply.github.com"
 
     - name: Get table version
+      id: extract_version
       run: >
         sudo apt-get update && sudo apt-get install -y libxml2-utils
+        && echo "version=$(xmllint --xpath 'string(//version_number)' "$FILE")" >> $GITHUB_OUTPUT
 
     - name: Check for changes
       id: check_changes
@@ -37,17 +39,12 @@ jobs:
 
     - name: Create PR if file changed
       if: steps.check_changes.outputs.changed == 'true'
-      run: |
-        VERSION=$(xmllint --xpath 'string(//version_number)' compliance_checker/data/cf-standard-name-table.xml)
-        BRANCH_NAME=cf-table-v${VERSION}
-        FILE_PATH="compliance_checker/data/cf-standard-name-table.xml"
-        git checkout -b "$BRANCH_NAME"
-        git add "$FILE_PATH"
-        git commit -m "Update detected in $FILE_PATH"
-        git push origin "$BRANCH_NAME"
-        gh pr create --title "Auto PR: Update to $FILE_PATH" \
-                     --body "This PR was automatically created because $FILE_PATH changed." \
-                     --head "$BRANCH_NAME" \
-                     --base main
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e  #v7.0.8
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "Update CF-Table to version ${{ steps.extract_version.outputs.version }}"
+        branch: "update-xml-v${{ steps.extract_version.outputs.version }}"
+        title: "Update CF-Table to version ${{ steps.extract_version.outputs.version }}"
+        body: This PR updates the CF-Table file to version ${{ steps.extract_version.outputs.version }}.
+        delete-branch: true
+        labels: Bot
