@@ -24,23 +24,27 @@ jobs:
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
 
+    - name: Get table version
+      run: >
+        sudo apt-get update && sudo apt-get install -y libxml2-utils
+
     - name: Check for changes
+      id: check_changes
       run: >
         wget https://cfconventions.org/Data/cf-standard-names/current/src/cf-standard-name-table.xml
-        mv cf-standard-name-table.xml compliance_checker/data/cf-standard-name-table.xml
-        git diff --quiet origin/main -- "compliance_checker/data/cf-standard-name-table.xml" || echo "changed=true" >> $GITHUB_OUTPUT
+        && mv cf-standard-name-table.xml compliance_checker/data/cf-standard-name-table.xml
+        && git diff --quiet origin/main -- "compliance_checker/data/cf-standard-name-table.xml" || echo "changed=true" >> $GITHUB_OUTPUT
 
     - name: Create PR if file changed
       if: steps.check_changes.outputs.changed == 'true'
       run: |
-        BRANCH_NAME="cftable-$(date +%s)"
+        VERSION=$(xmllint --xpath 'string(//version_number)' compliance_checker/data/cf-standard-name-table.xml)
+        BRANCH_NAME=cf-table-v${VERSION}
         FILE_PATH="compliance_checker/data/cf-standard-name-table.xml"
-
         git checkout -b "$BRANCH_NAME"
         git add "$FILE_PATH"
         git commit -m "Update detected in $FILE_PATH"
         git push origin "$BRANCH_NAME"
-
         gh pr create --title "Auto PR: Update to $FILE_PATH" \
                      --body "This PR was automatically created because $FILE_PATH changed." \
                      --head "$BRANCH_NAME" \
